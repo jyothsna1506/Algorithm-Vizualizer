@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary Tree Left View Explorer</title>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      color: #2d3748;
+    }
+
+    .app-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      text-align: center;
+      padding: 24px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      z-index: 10;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #718096;
+      font-weight: 400;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* LEFT PANEL - FIXED VISUALIZATION */
+    .left-panel {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 2px solid #dee2e6;
+    }
+
+    .controls-section {
+      padding: 20px;
+      background: white;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(79, 172, 254, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .visualization-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #tree-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .empty-state {
+      position: absolute;
+      text-align: center;
+      color: #a0aec0;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-text {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    /* RIGHT PANEL - SCROLLABLE CONTENT */
+    .right-panel {
+      background: white;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .content-section {
+      padding: 32px;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e9ecef;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-icon {
+      font-size: 28px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .status-box {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border: 2px solid #dee2e6;
+    }
+
+    .status-label {
+      font-size: 12px;
+      color: #6c757d;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .status-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .algorithm-steps {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      border-left: 4px solid #667eea;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+
+    .step-item:last-child {
+      border-bottom: none;
+    }
+
+    .step-item.active {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+      margin: 0 -20px;
+      padding: 16px 20px;
+      border-radius: 8px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: #e9ecef;
+      color: #6c757d;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .step-item.active .step-number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 6px;
+    }
+
+    .step-description {
+      font-size: 14px;
+      color: #6c757d;
+      line-height: 1.6;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .complexity-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .complexity-label {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .complexity-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .complexity-explanation {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #495057;
+    }
+
+    .complexity-explanation strong {
+      color: #2d3748;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .complexity-point {
+      padding-left: 20px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .complexity-point:before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #667eea;
+      font-weight: 700;
+    }
+
+    .left-view-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .left-view-node {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      animation: nodeAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes nodeAppear {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* TREE VISUALIZATION STYLES */
+    .tree-node {
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .node-circle {
+      fill: #e9ecef;
+      stroke: #adb5bd;
+      stroke-width: 2;
+      transition: all 0.4s ease;
+    }
+
+    .tree-node.visible .node-circle {
+      fill: #667eea;
+      stroke: #5a67d8;
+      stroke-width: 3;
+      filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.6));
+    }
+
+    .tree-node.current .node-circle {
+      fill: #f5576c;
+      stroke: #e53e3e;
+      stroke-width: 3;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        filter: drop-shadow(0 4px 12px rgba(245, 87, 108, 0.6));
+      }
+      50% {
+        filter: drop-shadow(0 6px 20px rgba(245, 87, 108, 0.9));
+      }
+    }
+
+    .tree-node.dimmed .node-circle {
+      fill: #f8f9fa;
+      stroke: #dee2e6;
+      opacity: 0.3;
+    }
+
+    .node-text {
+      fill: #495057;
+      font-size: 16px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      transition: fill 0.4s ease;
+    }
+
+    .tree-node.visible .node-text,
+    .tree-node.current .node-text {
+      fill: white;
+    }
+
+    .tree-edge {
+      stroke: #adb5bd;
+      stroke-width: 2;
+      fill: none;
+      transition: all 0.4s ease;
+    }
+
+    .level-line {
+      stroke: #dee2e6;
+      stroke-width: 1;
+      stroke-dasharray: 5, 5;
+      opacity: 0.5;
+    }
+
+    .node-label {
+      font-size: 11px;
+      fill: #667eea;
+      font-weight: 600;
+      text-anchor: middle;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .tree-node.visible .node-label {
+      opacity: 1;
+    }
+
+    .camera-indicator {
+      opacity: 0;
+      transition: all 1s ease;
+      pointer-events: none;
+    }
+
+    .camera-indicator.active {
+      opacity: 1;
+    }
+
+    /* INPUT MODAL */
+    .input-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .input-modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+      animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalSlideIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 16px;
+    }
+
+    .modal-description {
+      font-size: 14px;
+      color: #718096;
+      margin-bottom: 24px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-outline {
+      background: white;
+      color: #4a5568;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-outline:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+    }
+
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+        overflow: auto;
+      }
+
+      .left-panel {
+        border-right: none;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      .right-panel {
+        overflow-y: visible;
+      }
+
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .complexity-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="app-container">
+   <header role="banner">
+    <h1 id="main-title">Binary Tree Left View</h1>
+    <p class="subtitle" id="subtitle">Interactive Educational Visualizer</p>
+   </header>
+   <main class="main-layout"><!-- LEFT PANEL - FIXED VISUALIZATION -->
+    <section class="left-panel" aria-label="Tree visualization">
+     <div class="controls-section">
+      <div class="control-row"><button class="btn btn-success" id="random-btn"> <span>🎲</span> <span id="random-button-text">Generate Random Tree</span> </button> <button class="btn btn-success" id="input-btn"> <span>✏️</span> <span id="input-button-text">User Input Tree</span> </button>
+      </div>
+      <div class="control-row"><button class="btn btn-primary" id="play-btn" disabled> <span>▶️</span> <span id="play-button-text">Play Animation</span> </button> <button class="btn btn-primary" id="step-btn" disabled> <span>⏭️</span> <span id="step-button-text">Next Step</span> </button> <button class="btn btn-secondary" id="reset-btn" disabled> <span>🔄</span> <span id="reset-button-text">Reset</span> </button>
+      </div>
+     </div>
+     <div class="visualization-container">
+      <svg id="tree-svg" viewbox="0 0 800 600" preserveaspectratio="xMidYMid meet"><defs>
+        <lineargradient id="cameraGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+         <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.4" />
+         <stop offset="100%" style="stop-color:#667eea;stop-opacity:0" />
+        </lineargradient>
+       </defs> <g id="level-lines"></g> <g id="edges"></g> <g id="nodes"></g> <g id="camera" class="camera-indicator">
+        <rect x="20" y="50" width="60" height="500" fill="url(#cameraGradient)" opacity="0.3" rx="10" />
+        <text x="50" y="30" fill="#667eea" font-size="14" font-weight="600" text-anchor="middle">
+         📷 LEFT
+        </text>
+       </g>
+      </svg>
+      <div class="empty-state" id="empty-state">
+       <div class="empty-state-icon">
+        🌳
+       </div>
+       <div class="empty-state-text">
+        Generate a tree to start exploring!
+       </div>
+      </div>
+     </div>
+    </section><!-- RIGHT PANEL - SCROLLABLE CONTENT -->
+    <aside class="right-panel" aria-label="Algorithm explanation">
+     <div class="content-section"><!-- CURRENT STATUS -->
+      <div class="section-card">
+       <h2 class="section-title"><span class="section-icon">📊</span> <span>Current Status</span></h2>
+       <div class="status-grid">
+        <div class="status-box">
+         <div class="status-label">
+          Current Level
+         </div>
+         <div class="status-value" id="current-level">
+          -
+         </div>
+        </div>
+        <div class="status-box">
+         <div class="status-label">
+          Nodes Visited
+         </div>
+         <div class="status-value" id="nodes-visited">
+          0
+         </div>
+        </div>
+        <div class="status-box">
+         <div class="status-label">
+          Left View Size
+         </div>
+         <div class="status-value" id="left-view-size">
+          0
+         </div>
+        </div>
+       </div>
+      </div><!-- VISIBLE NODES -->
+      <div class="section-card">
+       <h2 class="section-title"><span class="section-icon">👁️</span> <span>Visible Nodes (Left View)</span></h2>
+       <div class="left-view-display" id="left-view-nodes">
+        <p style="color: #6c757d; font-size: 14px;">No nodes yet. Start the animation to see the left view!</p>
+       </div>
+      </div><!-- ALGORITHM STEPS -->
+      <div class="section-card">
+       <h2 class="section-title"><span class="section-icon">📋</span> <span>Algorithm Steps</span></h2>
+       <div class="algorithm-steps">
+        <div class="step-item" id="step-1">
+         <div class="step-number">
+          1
+         </div>
+         <div class="step-content">
+          <div class="step-title">
+           Initialize Data Structures
+          </div>
+          <div class="step-description">
+           Create an empty queue for level-order traversal and a map to track the first node at each level.
+          </div>
+         </div>
+        </div>
+        <div class="step-item" id="step-2">
+         <div class="step-number">
+          2
+         </div>
+         <div class="step-content">
+          <div class="step-title">
+           Enqueue Root Node
+          </div>
+          <div class="step-description">
+           Add the root node to the queue with level 0 to begin the traversal process.
+          </div>
+         </div>
+        </div>
+        <div class="step-item" id="step-3">
+         <div class="step-number">
+          3
+         </div>
+         <div class="step-content">
+          <div class="step-title">
+           Process Current Level
+          </div>
+          <div class="step-description">
+           Dequeue the front node and check if it's the first node at its level. If yes, add it to the left view result.
+          </div>
+         </div>
+        </div>
+        <div class="step-item" id="step-4">
+         <div class="step-number">
+          4
+         </div>
+         <div class="step-content">
+          <div class="step-title">
+           Enqueue Children
+          </div>
+          <div class="step-description">
+           Add the left child (if exists) and right child (if exists) to the queue with incremented level number.
+          </div>
+         </div>
+        </div>
+        <div class="step-item" id="step-5">
+         <div class="step-number">
+          5
+         </div>
+         <div class="step-content">
+          <div class="step-title">
+           Repeat Until Complete
+          </div>
+          <div class="step-description">
+           Continue processing nodes from the queue until it's empty. Each level's first node becomes part of the left view.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- TIME COMPLEXITY -->
+      <div class="section-card">
+       <h2 class="section-title"><span class="section-icon">⚡</span> <span>Time &amp; Space Complexity</span></h2>
+       <div class="complexity-grid">
+        <div class="complexity-box">
+         <div class="complexity-label">
+          Time Complexity
+         </div>
+         <div class="complexity-value">
+          O(n)
+         </div>
+        </div>
+        <div class="complexity-box">
+         <div class="complexity-label">
+          Space Complexity
+         </div>
+         <div class="complexity-value">
+          O(w)
+         </div>
+        </div>
+       </div>
+       <div class="complexity-explanation"><strong>⏱️ Time Complexity: O(n)</strong>
+        <div class="complexity-point">
+         Each node in the tree is visited exactly once during the level-order traversal
+        </div>
+        <div class="complexity-point">
+         Enqueue and dequeue operations take constant time O(1)
+        </div>
+        <div class="complexity-point">
+         For n total nodes, the algorithm performs O(n) operations
+        </div><strong style="margin-top: 20px;">💾 Space Complexity: O(w)</strong>
+        <div class="complexity-point">
+         The queue stores at most 'w' nodes (width of the tree at its widest level)
+        </div>
+        <div class="complexity-point">
+         Best case (skewed tree): O(1) - only one node per level
+        </div>
+        <div class="complexity-point">
+         Worst case (complete binary tree): O(n/2) = O(n) - the last level can have n/2 nodes
+        </div>
+       </div>
+      </div><!-- HOW IT WORKS -->
+      <div class="section-card">
+       <h2 class="section-title"><span class="section-icon">💡</span> <span>How It Works</span></h2>
+       <div style="font-size: 15px; line-height: 1.8; color: #495057;">
+        <p style="margin-bottom: 16px;">The <strong>Left View</strong> of a binary tree shows all nodes visible when viewing the tree from the left side. Imagine standing to the left of the tree - you'd only see the leftmost node at each level.</p>
+        <p style="margin-bottom: 16px;">The algorithm uses <strong>level-order traversal</strong> (breadth-first search) to process nodes level by level from left to right. At each level, the first node encountered is added to the result, as it would be the visible node from the left perspective.</p>
+        <p style="margin-bottom: 16px;"><strong>Key Insight:</strong> By maintaining level information for each node in the queue, we can identify when we're processing the first node of a new level. This first node at each level forms the left view.</p>
+        <p><strong>Example:</strong> For a tree with root 1, left child 2, and right child 3, the left view would be [1, 2] because node 1 is visible at level 0 and node 2 (being leftmost) is visible at level 1.</p>
+       </div>
+      </div>
+     </div>
+    </aside>
+   </main>
+  </div><!-- INPUT MODAL -->
+  <div class="input-modal" id="input-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+   <div class="modal-content">
+    <h2 class="modal-title" id="modal-title">Create Custom Tree</h2>
+    <p class="modal-description">Enter node values separated by commas. Use 'null' for empty positions.</p>
+    <div class="input-group"><label for="tree-input" class="input-label">Node Values (Level Order)</label> <input type="text" id="tree-input" class="text-input" placeholder="1, 2, 3, 4, null, 5, 6" aria-describedby="input-help">
+     <p id="input-help" style="font-size: 12px; color: #718096; margin-top: 6px;">Example: 1, 2, 3, 4, 5, 6, 7</p>
+    </div>
+    <div class="modal-buttons"><button class="btn btn-outline" id="cancel-btn" style="flex: 1;">Cancel</button> <button class="btn btn-primary" id="create-btn" style="flex: 1;">Create Tree</button>
+    </div>
+   </div>
+  </div>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script>
+    const defaultConfig = {
+      main_title: "Binary Tree Left View",
+      subtitle: "Interactive Educational Visualizer",
+      play_button: "Play Animation",
+      step_button: "Next Step",
+      reset_button: "Reset",
+      random_button: "Generate Random Tree",
+      input_button: "User Input Tree"
+    };
+
+    class TreeNode {
+      constructor(value) {
+        this.value = value;
+        this.left = null;
+        this.right = null;
+      }
+    }
+
+    class BinaryTreeVisualizer {
+      constructor() {
+        this.root = null;
+        this.svg = document.getElementById('tree-svg');
+        this.nodesGroup = document.getElementById('nodes');
+        this.edgesGroup = document.getElementById('edges');
+        this.levelLinesGroup = document.getElementById('level-lines');
+        this.nodePositions = new Map();
+        this.leftViewNodes = [];
+        this.currentLevel = 0;
+        this.isAnimating = false;
+        this.animationStep = 0;
+        this.levelNodes = [];
+        
+        this.setupEventListeners();
+      }
+
+      setupEventListeners() {
+        document.getElementById('random-btn').addEventListener('click', () => this.generateRandomTree());
+        document.getElementById('input-btn').addEventListener('click', () => this.showInputModal());
+        document.getElementById('play-btn').addEventListener('click', () => this.playAnimation());
+        document.getElementById('step-btn').addEventListener('click', () => this.stepAnimation());
+        document.getElementById('reset-btn').addEventListener('click', () => this.reset());
+        document.getElementById('create-btn').addEventListener('click', () => this.createCustomTree());
+        document.getElementById('cancel-btn').addEventListener('click', () => this.hideInputModal());
+      }
+
+      generateRandomTree() {
+        const nodeCount = 7 + Math.floor(Math.random() * 6);
+        const values = [];
+        for (let i = 1; i <= nodeCount; i++) {
+          if (Math.random() > 0.2) {
+            values.push(i);
+          } else {
+            values.push(null);
+          }
+        }
+        this.buildTreeFromArray(values);
+        this.renderTree();
+        this.enableControls();
+      }
+
+      showInputModal() {
+        document.getElementById('input-modal').classList.add('active');
+        document.getElementById('tree-input').focus();
+      }
+
+      hideInputModal() {
+        document.getElementById('input-modal').classList.remove('active');
+        document.getElementById('tree-input').value = '';
+      }
+
+      createCustomTree() {
+        const input = document.getElementById('tree-input').value.trim();
+        if (!input) return;
+
+        const values = input.split(',').map(v => {
+          const trimmed = v.trim().toLowerCase();
+          return trimmed === 'null' ? null : parseInt(trimmed);
+        });
+
+        this.buildTreeFromArray(values);
+        this.hideInputModal();
+        this.renderTree();
+        this.enableControls();
+      }
+
+      buildTreeFromArray(arr) {
+        if (!arr || arr.length === 0 || arr[0] === null) {
+          this.root = null;
+          return;
+        }
+
+        this.root = new TreeNode(arr[0]);
+        const queue = [this.root];
+        let i = 1;
+
+        while (queue.length > 0 && i < arr.length) {
+          const node = queue.shift();
+
+          if (i < arr.length && arr[i] !== null) {
+            node.left = new TreeNode(arr[i]);
+            queue.push(node.left);
+          }
+          i++;
+
+          if (i < arr.length && arr[i] !== null) {
+            node.right = new TreeNode(arr[i]);
+            queue.push(node.right);
+          }
+          i++;
+        }
+      }
+
+      calculatePositions() {
+        if (!this.root) return;
+
+        this.nodePositions.clear();
+        const width = 800;
+        const height = 600;
+        const startY = 80;
+        const levelHeight = 100;
+
+        const calculateLevels = (node, level = 0) => {
+          if (!node) return 0;
+          const leftLevels = calculateLevels(node.left, level + 1);
+          const rightLevels = calculateLevels(node.right, level + 1);
+          return Math.max(leftLevels, rightLevels) + 1;
+        };
+
+        const maxLevels = calculateLevels(this.root);
+
+        const position = (node, x, y, level, horizontalSpacing) => {
+          if (!node) return;
+
+          this.nodePositions.set(node, { x, y, level });
+
+          const nextSpacing = horizontalSpacing / 2;
+          if (node.left) {
+            position(node.left, x - horizontalSpacing, y + levelHeight, level + 1, nextSpacing);
+          }
+          if (node.right) {
+            position(node.right, x + horizontalSpacing, y + levelHeight, level + 1, nextSpacing);
+          }
+        };
+
+        position(this.root, width / 2, startY, 0, width / 4);
+      }
+
+      renderTree() {
+        this.calculatePositions();
+        this.nodesGroup.innerHTML = '';
+        this.edgesGroup.innerHTML = '';
+        this.levelLinesGroup.innerHTML = '';
+
+        if (!this.root) {
+          document.getElementById('empty-state').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('empty-state').style.display = 'none';
+
+        this.drawLevelLines();
+        this.drawEdges(this.root);
+        this.drawNodes(this.root);
+        this.calculateLeftView();
+      }
+
+      drawLevelLines() {
+        const levels = new Set();
+        this.nodePositions.forEach(pos => levels.add(pos.level));
+
+        levels.forEach(level => {
+          const y = 80 + level * 100;
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('class', 'level-line');
+          line.setAttribute('x1', '50');
+          line.setAttribute('y1', y);
+          line.setAttribute('x2', '750');
+          line.setAttribute('y2', y);
+          this.levelLinesGroup.appendChild(line);
+        });
+      }
+
+      drawEdges(node) {
+        if (!node) return;
+
+        const pos = this.nodePositions.get(node);
+
+        if (node.left) {
+          const leftPos = this.nodePositions.get(node.left);
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const d = `M ${pos.x} ${pos.y + 25} Q ${pos.x} ${(pos.y + leftPos.y) / 2} ${leftPos.x} ${leftPos.y - 25}`;
+          path.setAttribute('class', 'tree-edge');
+          path.setAttribute('d', d);
+          this.edgesGroup.appendChild(path);
+          this.drawEdges(node.left);
+        }
+
+        if (node.right) {
+          const rightPos = this.nodePositions.get(node.right);
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const d = `M ${pos.x} ${pos.y + 25} Q ${pos.x} ${(pos.y + rightPos.y) / 2} ${rightPos.x} ${rightPos.y - 25}`;
+          path.setAttribute('class', 'tree-edge');
+          path.setAttribute('d', d);
+          this.edgesGroup.appendChild(path);
+          this.drawEdges(node.right);
+        }
+      }
+
+      drawNodes(node) {
+        if (!node) return;
+
+        const pos = this.nodePositions.get(node);
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'tree-node');
+        g.setAttribute('data-value', node.value);
+        g.setAttribute('data-level', pos.level);
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'node-circle');
+        circle.setAttribute('cx', pos.x);
+        circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', '25');
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('class', 'node-text');
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y);
+        text.textContent = node.value;
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('class', 'node-label');
+        label.setAttribute('x', pos.x);
+        label.setAttribute('y', pos.y - 40);
+        label.textContent = '👁️ Visible';
+
+        g.appendChild(circle);
+        g.appendChild(text);
+        g.appendChild(label);
+        this.nodesGroup.appendChild(g);
+
+        if (node.left) this.drawNodes(node.left);
+        if (node.right) this.drawNodes(node.right);
+      }
+
+      calculateLeftView() {
+        this.leftViewNodes = [];
+        this.levelNodes = [];
+
+        if (!this.root) return;
+
+        const queue = [{ node: this.root, level: 0 }];
+        const levelMap = new Map();
+
+        while (queue.length > 0) {
+          const { node, level } = queue.shift();
+
+          if (!levelMap.has(level)) {
+            levelMap.set(level, []);
+          }
+          levelMap.get(level).push(node);
+
+          if (node.left) queue.push({ node: node.left, level: level + 1 });
+          if (node.right) queue.push({ node: node.right, level: level + 1 });
+        }
+
+        levelMap.forEach((nodes, level) => {
+          this.levelNodes.push(nodes);
+          this.leftViewNodes.push(nodes[0]);
+        });
+      }
+
+      async playAnimation() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.animationStep = 0;
+
+        document.getElementById('play-btn').disabled = true;
+        document.getElementById('step-btn').disabled = true;
+
+        document.getElementById('camera').classList.add('active');
+
+        for (let i = 0; i < this.levelNodes.length; i++) {
+          await this.animateLevel(i);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('step-btn').disabled = false;
+        this.isAnimating = false;
+      }
+
+      async stepAnimation() {
+        if (this.isAnimating) return;
+        
+        if (this.animationStep === 0) {
+          document.getElementById('camera').classList.add('active');
+        }
+
+        if (this.animationStep < this.levelNodes.length) {
+          await this.animateLevel(this.animationStep);
+          this.animationStep++;
+        }
+      }
+
+      async animateLevel(levelIndex) {
+        const nodes = this.levelNodes[levelIndex];
+        const leftmostNode = nodes[0];
+
+        document.getElementById('current-level').textContent = levelIndex;
+        document.getElementById('nodes-visited').textContent = 
+          (parseInt(document.getElementById('nodes-visited').textContent) || 0) + nodes.length;
+
+        // Highlight algorithm step
+        document.querySelectorAll('.step-item').forEach(s => s.classList.remove('active'));
+        document.getElementById('step-3').classList.add('active');
+
+        for (const node of nodes) {
+          const nodeEl = this.nodesGroup.querySelector(`[data-value="${node.value}"]`);
+          nodeEl.classList.add('current');
+          await new Promise(resolve => setTimeout(resolve, 400));
+          nodeEl.classList.remove('current');
+        }
+
+        const leftNodeEl = this.nodesGroup.querySelector(`[data-value="${leftmostNode.value}"]`);
+        leftNodeEl.classList.add('visible');
+
+        for (const node of nodes) {
+          if (node !== leftmostNode) {
+            const nodeEl = this.nodesGroup.querySelector(`[data-value="${node.value}"]`);
+            nodeEl.classList.add('dimmed');
+          }
+        }
+
+        const leftViewContainer = document.getElementById('left-view-nodes');
+        
+        // Clear initial message if present
+        if (leftViewContainer.children.length === 1 && leftViewContainer.children[0].tagName === 'P') {
+          leftViewContainer.innerHTML = '';
+        }
+
+        const nodeChip = document.createElement('div');
+        nodeChip.className = 'left-view-node';
+        nodeChip.textContent = leftmostNode.value;
+        leftViewContainer.appendChild(nodeChip);
+
+        document.getElementById('left-view-size').textContent = leftViewContainer.querySelectorAll('.left-view-node').length;
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      reset() {
+        this.animationStep = 0;
+        this.isAnimating = false;
+
+        document.querySelectorAll('.tree-node').forEach(node => {
+          node.classList.remove('visible', 'current', 'dimmed');
+        });
+
+        document.querySelectorAll('.step-item').forEach(s => s.classList.remove('active'));
+        document.getElementById('camera').classList.remove('active');
+
+        document.getElementById('current-level').textContent = '-';
+        document.getElementById('nodes-visited').textContent = '0';
+        document.getElementById('left-view-size').textContent = '0';
+        document.getElementById('left-view-nodes').innerHTML = '<p style="color: #6c757d; font-size: 14px;">No nodes yet. Start the animation to see the left view!</p>';
+
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('step-btn').disabled = false;
+      }
+
+      enableControls() {
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('step-btn').disabled = false;
+        document.getElementById('reset-btn').disabled = false;
+      }
+    }
+
+    let visualizer;
+
+    async function onConfigChange(config) {
+      document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+      document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+      document.getElementById('play-button-text').textContent = config.play_button || defaultConfig.play_button;
+      document.getElementById('step-button-text').textContent = config.step_button || defaultConfig.step_button;
+      document.getElementById('reset-button-text').textContent = config.reset_button || defaultConfig.reset_button;
+      document.getElementById('random-button-text').textContent = config.random_button || defaultConfig.random_button;
+      document.getElementById('input-button-text').textContent = config.input_button || defaultConfig.input_button;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["main_title", config.main_title || defaultConfig.main_title],
+          ["subtitle", config.subtitle || defaultConfig.subtitle],
+          ["play_button", config.play_button || defaultConfig.play_button],
+          ["step_button", config.step_button || defaultConfig.step_button],
+          ["reset_button", config.reset_button || defaultConfig.reset_button],
+          ["random_button", config.random_button || defaultConfig.random_button],
+          ["input_button", config.input_button || defaultConfig.input_button]
+        ])
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      visualizer = new BinaryTreeVisualizer();
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b25c0c621f73b7f',t:'MTc2NjQ3MDgyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
